@@ -4,13 +4,15 @@
 #    Note, the SP environment setup was based on script that SP runs from command prompt found 
 #     on JHP machine here "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\14\CONFIG\POWERSHELL\Registration\SharePoint.ps1"
 
-
-$defaultStartupDirectory = "c:\scratch"
+$startupDirectory = "d:\scratch"
+$defaultStartupDirectory = "d:\scratch"
 $developerStartupDirectory = "c:\dev"
 $sharePointStartupDirectory = "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\14"
 $localVisualStudioDirectory ="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC"
-$homeDirectory = "c:\users\john"
-$gitBinPath ="C:\utils\Git\bin"
+$homeDirectory = "c:\users\jptacek"
+$gitBinPath ="C:\Program Files (x86)\Git\bin"
+
+$startupDirectory = $defaultStartupDirectory
 
 $startupDirectory = $defaultStartupDirectory
 
@@ -38,11 +40,11 @@ Function EnableVisualStudio {
 #Set environment variables for Visual Studio Command Prompt
 # Info from here http://allen-mack.blogspot.com/2008/03/replace-visual-studio-command-prompt.html
     pushd $localVisualStudioDirectory 
-    cmd /c ìvcvarsall.bat&setî |
+    cmd /c ‚Äúvcvarsall.bat&set‚Äù |
     foreach { 
-        if ($_ -match ì=î) 
+        if ($_ -match ‚Äú=‚Äù) 
         {    
-            $v = $_.split(ì=î); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
+            $v = $_.split(‚Äú=‚Äù); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
         }
     }
     popd
@@ -199,6 +201,7 @@ Function Set-Environment
            Set-UI Admin
            EnableVisualStudio 
            EnableSharePoint
+           EnableGit
         }
         
         "EndUser"
@@ -254,19 +257,19 @@ Function Set-ScreenColor
         
         "EndUser"
         {
-            (Get-Host).UI.RawUI.BackgroundColor = "darkmagenta"
-            (Get-Host).UI.RawUI.ForegroundColor = "white"
+            (Get-Host).UI.RawUI.BackgroundColor = "black"
+            (Get-Host).UI.RawUI.ForegroundColor = "Green"
 
         }
         "SharePoint"
         {
-            (Get-Host).UI.RawUI.BackgroundColor = "darkgreen"
-            (Get-Host).UI.RawUI.ForegroundColor = "white"
+            (Get-Host).UI.RawUI.BackgroundColor = "black"
+            (Get-Host).UI.RawUI.ForegroundColor = "red"
         }
         "Developer"
         {
             (Get-Host).UI.RawUI.BackgroundColor = "black"
-            (Get-Host).UI.RawUI.ForegroundColor = "white"
+            (Get-Host).UI.RawUI.ForegroundColor = "yellow"
         }
         
         default
@@ -285,12 +288,12 @@ Function Prompt
         # Reset color, which can be messed up by Enable-GitColors
         $Host.UI.RawUI.ForegroundColor = $GitPromptSettings.DefaultForegroundColor
 
-        Write-Host($pwd ) -nonewline
+        Write-Output $("PS "+ $(Get-Location) + $GLOBAL:PromptTrail + " ")  -nonewline
 
         Write-VcsStatus
 
         $LASTEXITCODE = $realLASTEXITCODE
-        return $GLOBAL:PromptTrail 
+        #return $GLOBAL:PromptTrail + " "
     }
     else {
         Write-Output $("PS "+ $(Get-Location) + $GLOBAL:PromptTrail + " ") #-NoNewline
