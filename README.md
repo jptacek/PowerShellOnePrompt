@@ -16,9 +16,10 @@ to create a directory in your Documents direcotry, WindowsPowerShell and copy th
 This is the profile that will execute each time PowerShell is started. Note, if you have yet to do so, you
 may need to configure scripts to run
 
-
     Set-ExecutionPolicy Unrestricted
 
+###Use###
+Each of the modes has a different
 
 
 It makes me crazy not to have GacUtil and SharePoint PowerShell scripts available in prompt

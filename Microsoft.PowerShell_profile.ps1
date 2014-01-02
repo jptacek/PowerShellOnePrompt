@@ -1,16 +1,15 @@
 #Configuring for your environment
 #   Home directory you want (d:\scratch)
-#   Location of visual studion (C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC)
+#   Location of visual studio (C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC)
 #    Note, the SP environment setup was based on script that SP runs from command prompt found 
-#     on JHP machine here "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\14\CONFIG\POWERSHELL\Registration\SharePoint.ps1"
+#     here "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\14\CONFIG\POWERSHELL\Registration\SharePoint.ps1"
 
-$startupDirectory = "d:\scratch"
-$defaultStartupDirectory = "d:\scratch"
+$startupDirectory = "c:\scratch"
+$defaultStartupDirectory = "c:\scratch"
 $developerStartupDirectory = "c:\dev"
 $sharePointStartupDirectory = "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\14"
-$localVisualStudioDirectory ="C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC"
+$localVisualStudioDirectory ="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC"
 $homeDirectory = "c:\users\jptacek"
-$gitBinPath ="C:\Program Files (x86)\Git\bin"
 
 $startupDirectory = $defaultStartupDirectory
 
@@ -19,32 +18,16 @@ $startupDirectory = $defaultStartupDirectory
 Remove-Variable -Force HOME
 Set-Variable HOME $homeDirectory 
 
-Function EnableGit {
-
-    # Load posh-git module from current directory
-    Import-Module $home\Documents\WindowsPowerShell\Modules\posh-git
-
-    # If module is installed in a default location ($env:PSModulePath),
-    # use this instead (see about_Modules for more information):
-    # Import-Module posh-git
-
-    Enable-GitColors
-
-    Pop-Location
-
-    Start-SshAgent -Quiet
-
-}
 
 Function EnableVisualStudio {
 #Set environment variables for Visual Studio Command Prompt
 # Info from here http://allen-mack.blogspot.com/2008/03/replace-visual-studio-command-prompt.html
     pushd $localVisualStudioDirectory 
-    cmd /c “vcvarsall.bat&set” |
+    cmd /c "vcvarsall.bat&set" |
     foreach { 
-        if ($_ -match “=”) 
+        if ($_ -match "=") 
         {    
-            $v = $_.split(“=”); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
+            $v = $_.split("="); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
         }
     }
     popd
@@ -57,7 +40,7 @@ Function EnableSharePoint {
     $a = Get-PSSnapin -registered | Select-String -pattern "Microsoft.SharePoint.PowerShell"
 
     if ($a -eq $null) {
-        Write-Host "SharePoint is not presenet"
+        Write-Host "SharePoint is not present"
     }
     else {
         $ver = $host | select version
@@ -196,33 +179,27 @@ Function Set-Environment
     switch ($Action)
     {
         "Admin" {
-           $global:IsGitPrompt = $false
            $startupDirectory = $home
            Set-UI Admin
            EnableVisualStudio 
            EnableSharePoint
-           EnableGit
         }
         
         "EndUser"
         {
-           $global:IsGitPrompt = $false
            $startupDirectory = $defaultStartupDirectory
            Set-UI EndUser
         }
         
         "Developer"
         {
-           $global:IsGitPrompt = $true
            $startupDirectory = $developerStartupDirectory
            Set-UI Developer
            EnableVisualStudio 
-           EnableGit
 
         }
         "SharePoint"
         {
-           $global:IsGitPrompt = $false
            $startupDirectory = $sharePointStartupDirectory 
            Set-UI SharePoint
            EnableSharePoint
@@ -230,7 +207,6 @@ Function Set-Environment
         
         default
         {
-           $global:IsGitPrompt = $false
            $startupDirectory = $defaultStartupDirectory
            Set-UI Default
         }
@@ -282,25 +258,9 @@ Function Set-ScreenColor
 
 Function Prompt
 {
-    if ( $global:IsGitPrompt) {
-        $realLASTEXITCODE = $LASTEXITCODE
-
-        # Reset color, which can be messed up by Enable-GitColors
-        $Host.UI.RawUI.ForegroundColor = $GitPromptSettings.DefaultForegroundColor
-
-        Write-Output $("PS "+ $(Get-Location) + $GLOBAL:PromptTrail + " ")  -nonewline
-
-        Write-VcsStatus
-
-        $LASTEXITCODE = $realLASTEXITCODE
-        #return $GLOBAL:PromptTrail + " "
-    }
-    else {
+   
         Write-Output $("PS "+ $(Get-Location) + $GLOBAL:PromptTrail + " ") #-NoNewline
-     }
-
-
-
+   
 }
 
 
@@ -311,8 +271,6 @@ $global:CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 
 
 [bool] $global:IsAdmin = $false
-[bool] $global:IsGitPrompt = $false
-$env:path += ";" + $gitBinPath 
 Push-Location (Split-Path -Path $MyInvocation.MyCommand.Definition -Parent)
 
 If($True -eq ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
